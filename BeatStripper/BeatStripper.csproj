@@ -7,7 +7,7 @@
     <ProjectGuid>{7A3CAB9E-0697-4B8B-9930-4E5FD2A970DC}</ProjectGuid>
     <OutputType>Exe</OutputType>
     <RootNamespace>BeatStripper</RootNamespace>
-    <AssemblyName>BeatStripper</AssemblyName>
+    <AssemblyName>GorillaTagStripper</AssemblyName>
     <TargetFrameworkVersion>v4.7.2</TargetFrameworkVersion>
     <FileAlignment>512</FileAlignment>
     <AutoGenerateBindingRedirects>true</AutoGenerateBindingRedirects>

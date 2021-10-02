@@ -15,68 +15,55 @@ namespace BeatStripper
                 if (args.Length > 0 && args[0] != null)
                 {
                     InstallDirectory = Path.GetDirectoryName(args[0]);
-                    if (File.Exists(Path.Combine(InstallDirectory, InstallDir.BeatSaberEXE)) == false)
+                    if (File.Exists(Path.Combine(InstallDirectory, InstallDir.GorillaTagEXE)) == false)
                     {
                         throw new Exception();
                     }
                 }
                 else
                 {
-                    Logger.Log("Resolving Beat Saber install directory");
+                    Logger.Log("Resolving Gorilla Tag install directory");
                     InstallDirectory = InstallDir.GetInstallDir();
                     if (InstallDirectory == null)
                     {
                         throw new Exception();
                     }
                 }
+                
+                string bepinexLibsDir = Path.Combine(InstallDirectory, @"BepInEx", @"core");
+                string managedDir = Path.Combine(InstallDirectory, InstallDir.GorillaTagDataFolder, @"Managed");
 
-                if (BSIPA.EnsureExists(InstallDirectory) == false)
-                {
-                    Logger.Log("Installed BSIPA");
-                }
+                //Logger.Log("Resolving Gorilla Tag version");
+                //string version = VersionFinder.FindVersion(InstallDirectory);
 
-                if (BSIPA.IsPatched(InstallDirectory) == false)
-                {
-                    Logger.Log("Patching game with BSIPA");
-                    BSIPA.PatchDir(InstallDirectory);
-                }
-
-                string libsDir = Path.Combine(InstallDirectory, @"Libs");
-                string managedDir = Path.Combine(InstallDirectory, @"Beat Saber_Data\Managed");
-
-                Logger.Log("Resolving Beat Saber version");
-                string version = VersionFinder.FindVersion(InstallDirectory);
-
-                string outDir = Path.Combine(Directory.GetCurrentDirectory(), "stripped", version);
+                string outDir = Path.Combine(Directory.GetCurrentDirectory(), "stripped");//, version);
                 Logger.Log("Creating output directory");
                 Directory.CreateDirectory(outDir);
 
                 string[] whitelist = new string[]
                 {
-                    "IPA.",
                     "TextMeshPro",
                     "UnityEngine.",
                     "Assembly-CSharp",
                     "0Harmony",
                     "Newtonsoft.Json",
-                    "MainAssembly",
                     "Cinemachine",
-                    "DynamicBone",
-                    "FinalIK",
-                    "OculusPlatform",
-                    "HMLib",
-                    "HMUI",
-                    "VRUI",
+                    "Photon",
+                    "Unity.",
+                    "BepInEx",
                 };
 
                 foreach (string f in ResolveDLLs(managedDir, whitelist))
                 {
-                    StripDLL(f, outDir, libsDir, managedDir);
+                    StripDLL(f, outDir, bepinexLibsDir, managedDir);
                 }
 
-                foreach (string f in ResolveDLLs(libsDir, whitelist))
+                if (Directory.Exists(bepinexLibsDir))
                 {
-                    StripDLL(f, outDir, libsDir, managedDir);
+                    foreach (string f in ResolveDLLs(bepinexLibsDir, whitelist))
+                    {
+                        StripDLL(f, outDir, bepinexLibsDir, managedDir);
+                    }
                 }
             }
             catch (Exception ex)

@@ -53,12 +53,15 @@ namespace BeatStripper
             {
                 FilenameLocations = new Dictionary<string, string>();
 
-                foreach (var fn in TraverseTree(LibraryPath, s => s != NativeLibraryPath))
+                if (Directory.Exists(LibraryPath))
                 {
-                    if (FilenameLocations.ContainsKey(fn.Name) == false)
+                    foreach (var fn in TraverseTree(LibraryPath, s => s != NativeLibraryPath))
                     {
-                        FilenameLocations.Add(fn.Name, fn.FullName);
-                    }
+                        if (FilenameLocations.ContainsKey(fn.Name) == false)
+                        {
+                            FilenameLocations.Add(fn.Name, fn.FullName);
+                        }
+                    } 
                 }
 
                 void AddDir(string path)
