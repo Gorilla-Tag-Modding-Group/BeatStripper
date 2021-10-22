@@ -1,5 +1,5 @@
-name: Generate Stripped DLL's
-on: [workflow_dispatch]
+name: Generate Stripped DLLs
+on: [push,workflow_dispatch]
 
 jobs:
   generate:
