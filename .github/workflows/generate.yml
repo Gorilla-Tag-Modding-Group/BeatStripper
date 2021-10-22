@@ -1,0 +1,34 @@
+name: Generate Stripped DLL's
+on: [workflow_dispatch]
+
+jobs:
+  generate:
+    runs-on: windows-latest
+    steps:
+    - uses: actions/checkout@v1
+    - name: Setup MSBuild
+      uses: warrenbuckley/Setup-MSBuild@v1
+    - name: Install dependencies
+      run: msbuild -t:restore
+    - name: Build project
+      run: msbuild BeatStripper.sln /t:Build /p:Configuration=Release
+
+    - name: Setup SteamCMD
+      uses: CyberAndrii/setup-steamcmd@v1.1.1
+    - name: Download Gorilla Tag
+      run: |
+        steamcmd +@sSteamCmdForcePlatformType windows +login ${{secrets.STEAM_USERNAME}} ${{secrets.STEAM_PASSWORD}} +force_install_dir $pwd/gorillatag +app_update 1533390 +quit
+    - name: List
+      run: |
+        ls  
+        ls $pwd/gorillatag
+
+    - name: Generate Stripped DLL's
+      run: .\BeatStripper\bin\Release\GorillaTagStripper.exe .\gorillatag\
+    - name: List
+      run: ls
+    - name: Upload Stripped DLL's
+      uses: actions/upload-artifact@v1
+      with:
+        name: Stripped-${{ github.sha }}
+        path: ./stripped
