@@ -3,9 +3,9 @@ on:
   workflow_dispatch:
     inputs:
       releaseTag:
-        description: 'Release Tag'
+        description: Release Tag
         required: true
-        default: 'v0.1.0'
+        default: v0.1.0
 
 jobs:
   generate:
