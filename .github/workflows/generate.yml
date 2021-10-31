@@ -1,10 +1,11 @@
 name: Generate Stripped DLLs
 on:
   workflow_dispatch:
-    releaseTag:
-      description: 'Release Tag'
-      required: true
-      default: 'v0.1.0'
+    inputs:
+      releaseTag:
+        description: 'Release Tag'
+        required: true
+        default: 'v0.1.0'
 
 jobs:
   generate:
