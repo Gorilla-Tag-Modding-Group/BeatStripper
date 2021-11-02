@@ -36,13 +36,23 @@ jobs:
     - name: Zip Files
       run: Compress-Archive -Path .\stripped\*.dll -DestinationPath .\compressed.zip
 
+    - name: Get Last Tag
+      uses: actions-ecosystem/action-get-latest-tag@v1
+      id: get-latest-tag
+    - name: Bump semver
+      uses: actions-ecosystem/action-bump-semver@v1
+      id: bump-semver
+      with:
+        current_version: ${{ steps.get-latest-tag.outputs.tag }}
+        level: minor
+
     - name: Make Release
       id: create_release
       uses: actions/create-release@v1
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       with:
-        tag_name: ${{ github.event.inputs.releaseTag }}
+        tag_name: ${{ steps.bump-semver.outputs.new_version }}
         release_name: Release ${{  github.event.inputs.releaseTag }}
         body: |
           Automatic release for updated game files.
