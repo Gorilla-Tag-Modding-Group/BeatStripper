@@ -84,9 +84,9 @@ jobs:
     - name: Download Libs
       if: ${{ needs.generate.outputs.upload-files == 'true'}}
       uses: actions/download-artifact@v2
-        with:
-          name: Stripped-${{ github.sha }}
-          path: ./stripped
+      with:
+        name: Stripped-${{ github.sha }}
+        path: ./stripped
     - name: Zip Files
       if: ${{ needs.generate.outputs.upload-files == 'true'}}
       shell: pwsh
