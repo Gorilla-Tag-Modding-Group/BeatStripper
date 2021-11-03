@@ -70,7 +70,7 @@ jobs:
     #       echo "::set-output name=same::false"
     #     fi
     - name: Upload Stripped DLLs
-    - if: ${{ steps.compare.outputs.different == 'true' }}
+      if: ${{ steps.compare.outputs.different == 'true' }}
       uses: actions/upload-artifact@v1
       with:
         name: Stripped-${{ github.sha }}
