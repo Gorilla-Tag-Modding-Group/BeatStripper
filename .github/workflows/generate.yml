@@ -95,7 +95,7 @@ jobs:
         release_name: Release ${{ steps.bump-semver.outputs.new_version }}
         body: |
           Automatic release for updated game files.
-        draft: true
+        # draft: true
         # prerelease: false
     - name: Add Files to Release
       if: ${{ needs.generate.outputs.upload-files == 'true'}}
