@@ -35,7 +35,7 @@ jobs:
     - name: Download Previous Libs
       uses: robinraju/release-downloader@v1.2
       with:
-        repository: "Graicc/GorillaStripper" # TODO: Update to GTMG repo
+        repository: ${{ github.repository }}
         latest: true
         fileName: "Stripped.zip" 
     - name: Unzip Previous Libs
