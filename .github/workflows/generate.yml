@@ -1,11 +1,6 @@
 name: Generate Stripped DLLs
 on:
   workflow_dispatch:
-    inputs:
-      releaseTag:
-        description: Release Tag
-        required: true
-        default: v0.1.0
 
 jobs:
   generate:
@@ -51,7 +46,6 @@ jobs:
     - name: Unzip Previous Libs
       run: Expand-Archive -Path Stripped.zip -DestinationPath prev
 
-    
     - name: Compare Files
       id: compare
       shell: bash
