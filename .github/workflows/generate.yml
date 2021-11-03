@@ -1,6 +1,8 @@
 name: Generate Stripped DLLs
 on:
   workflow_dispatch:
+  schedule:
+    - cron: 0 * * * *
 
 jobs:
   generate:
@@ -28,13 +30,6 @@ jobs:
     # Run stripper on game
     - name: Generate Stripped DLLs
       run: .\BeatStripper\bin\Release\GorillaTagStripper.exe .\gorillatag\
-    # - name: Upload Stripped DLLs
-    #   uses: actions/upload-artifact@v1
-    #   with:
-    #     name: Stripped-${{ github.sha }}
-    #     path: ./stripped
-    #- name: Zip Files
-    #  run: Compress-Archive -Path .\stripped\*.dll -DestinationPath .\compressed.zip
 
     # Compare new libs to old libs
     - name: Download Previous Libs
@@ -45,31 +40,12 @@ jobs:
         fileName: "Stripped.zip" 
     - name: Unzip Previous Libs
       run: Expand-Archive -Path Stripped.zip -DestinationPath prev
-
     - name: Compare Files
       id: compare
       shell: bash
       run: diff stripped prev > /dev/null && echo "::set-output name=different::false" || echo "::set-output name=different::true"
 
-    # - name: Compare Files
-    #   id: compare
-    #   run: |
-    #     $foldera = Get-ChildItem -Recurse -path stripped
-    #     $folderb = Get-ChildItem -Recurse -path prev
-    #     if (Compare-Object -ReferenceObject $foldera -DifferenceObject $folderb) {
-    #       echo "::set-output name=different::true"
-    #     } else {
-    #       echo "::set-output name=different::false"
-    #     }
-    # - name: Compare Files
-    #   id: compare
-    #   shell: bash
-    #   run: |
-    #     if cmp --silent compressed.zip Stripped.zip; then
-    #       echo "::set-output name=same::true"
-    #     else
-    #       echo "::set-output name=same::false"
-    #     fi
+    # Upload DLLs if different
     - name: Upload Stripped DLLs
       if: ${{ steps.compare.outputs.different == 'true' }}
       uses: actions/upload-artifact@v1
@@ -94,6 +70,7 @@ jobs:
       shell: pwsh
       run: Compress-Archive -Path .\stripped\*.dll -DestinationPath .\compressed.zip
  
+    # Bump semver
     - name: Get Last Tag
       if: ${{ needs.generate.outputs.upload-files == 'true'}}
       id: get-latest-tag
@@ -106,6 +83,7 @@ jobs:
         current_version: ${{ steps.get-latest-tag.outputs.tag }}
         level: minor
 
+    # Made release
     - name: Make Release
       if: ${{ needs.generate.outputs.upload-files == 'true'}}
       id: create_release
@@ -114,12 +92,11 @@ jobs:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       with:
         tag_name: ${{ steps.bump-semver.outputs.new_version }}
-        release_name: Release ${{  github.event.inputs.releaseTag }}
+        release_name: Release ${{ steps.bump-semver.outputs.new_version }}
         body: |
           Automatic release for updated game files.
         draft: true
-        prerelease: false
-
+        # prerelease: false
     - name: Add Files to Release
       if: ${{ needs.generate.outputs.upload-files == 'true'}}
       uses: actions/upload-release-asset@v1
