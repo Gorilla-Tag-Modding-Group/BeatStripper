@@ -50,16 +50,23 @@ jobs:
         fileName: "Stripped.zip" 
     - name: Unzip Previous Libs
       run: Expand-Archive -Path Stripped.zip -DestinationPath prev
-    - name: Copmare Files
+
+    
+    - name: Compare Files
       id: compare
-      run: |
-        $foldera = Get-ChildItem -Recurse -path stripped
-        $folderb = Get-ChildItem -Recurse -path prev
-        if (Compare-Object -ReferenceObject $foldera -DifferenceObject $folderb) {
-          echo "::set-output name=different::true"
-        } else {
-          echo "::set-output name=different::false"
-        }
+      shell: bash
+      run: diff stripped prev > /dev/null && echo "::set-output name=different::false" || echo "::set-output name=different::true"
+
+    # - name: Compare Files
+    #   id: compare
+    #   run: |
+    #     $foldera = Get-ChildItem -Recurse -path stripped
+    #     $folderb = Get-ChildItem -Recurse -path prev
+    #     if (Compare-Object -ReferenceObject $foldera -DifferenceObject $folderb) {
+    #       echo "::set-output name=different::true"
+    #     } else {
+    #       echo "::set-output name=different::false"
+    #     }
     # - name: Compare Files
     #   id: compare
     #   shell: bash
@@ -81,6 +88,7 @@ jobs:
     needs: generate
     steps:
     # Download stripped libs from previous job
+    - uses: actions/checkout@v1
     - name: Download Libs
       if: ${{ needs.generate.outputs.upload-files == 'true'}}
       uses: actions/download-artifact@v2
