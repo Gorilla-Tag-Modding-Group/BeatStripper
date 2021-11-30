@@ -74,9 +74,7 @@ jobs:
     - name: Get Last Tag
       if: ${{ needs.generate.outputs.upload-files == 'true'}}
       id: get-latest-tag
-      uses: actions-ecosystem/action-get-latest-tag@v1
-      with:
-        semver_only: true
+      run: echo "::set-output name=tag::$(git tag --sort=v:refname | tail -n 1)"
     - name: Bump semver
       if: ${{ needs.generate.outputs.upload-files == 'true'}}
       id: bump-semver
