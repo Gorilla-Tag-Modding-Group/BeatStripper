@@ -1,0 +1,109 @@
+name: Generate Stripped DLLs
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: 0 * * * *
+
+jobs:
+  generate:
+    runs-on: windows-latest
+    outputs:
+      upload-files: ${{ steps.compare.outputs.different }}
+    steps:
+    # Compile
+    - uses: actions/checkout@v1
+    - name: Setup MSBuild
+      uses: warrenbuckley/Setup-MSBuild@v1
+      env:
+        ACTIONS_ALLOW_UNSECURE_COMMANDS: true
+    - name: Install dependencies
+      run: msbuild -t:restore
+    - name: Build project
+      run: msbuild BeatStripper.sln /t:Build /p:Configuration=Release
+
+    # Download game
+    - name: Setup SteamCMD
+      uses: CyberAndrii/setup-steamcmd@v1.1.1
+    - name: Download Gorilla Tag
+      run: steamcmd +@sSteamCmdForcePlatformType windows +login ${{secrets.STEAM_USERNAME}} ${{secrets.STEAM_PASSWORD}} +force_install_dir $pwd/gorillatag +app_update 1533390 +quit
+
+    # Run stripper on game
+    - name: Generate Stripped DLLs
+      run: .\BeatStripper\bin\Release\GorillaTagStripper.exe .\gorillatag\
+
+    # Compare new libs to old libs
+    - name: Download Previous Libs
+      uses: robinraju/release-downloader@v1.2
+      with:
+        repository: ${{ github.repository }}
+        latest: true
+        fileName: "Stripped.zip" 
+    - name: Unzip Previous Libs
+      run: Expand-Archive -Path Stripped.zip -DestinationPath prev
+    - name: Compare Files
+      id: compare
+      shell: bash
+      run: diff stripped prev > /dev/null && echo "::set-output name=different::false" || echo "::set-output name=different::true"
+
+    # Upload DLLs if different
+    - name: Upload Stripped DLLs
+      if: ${{ steps.compare.outputs.different == 'true' }}
+      uses: actions/upload-artifact@v1
+      with:
+        name: Stripped-${{ github.sha }}
+        path: ./stripped
+
+  upload:
+    runs-on: ubuntu-latest
+    needs: generate
+    steps:
+    # Download stripped libs from previous job
+    - uses: actions/checkout@v1
+    - name: Download Libs
+      if: ${{ needs.generate.outputs.upload-files == 'true'}}
+      uses: actions/download-artifact@v2
+      with:
+        name: Stripped-${{ github.sha }}
+        path: ./stripped
+    - name: Zip Files
+      if: ${{ needs.generate.outputs.upload-files == 'true'}}
+      shell: pwsh
+      run: Compress-Archive -Path .\stripped\*.dll -DestinationPath .\compressed.zip
+ 
+    # Bump semver
+    - name: Get Last Tag
+      if: ${{ needs.generate.outputs.upload-files == 'true'}}
+      id: get-latest-tag
+      run: echo "::set-output name=tag::$(git tag --sort=v:refname | tail -n 1)"
+    - name: Bump semver
+      if: ${{ needs.generate.outputs.upload-files == 'true'}}
+      id: bump-semver
+      uses: actions-ecosystem/action-bump-semver@v1
+      with:
+        current_version: ${{ steps.get-latest-tag.outputs.tag }}
+        level: minor
+
+    # Made release
+    - name: Make Release
+      if: ${{ needs.generate.outputs.upload-files == 'true'}}
+      id: create_release
+      uses: actions/create-release@v1
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      with:
+        tag_name: ${{ steps.bump-semver.outputs.new_version }}
+        release_name: Release ${{ steps.bump-semver.outputs.new_version }}
+        body: |
+          Automatic release for updated game files.
+        # draft: true
+        # prerelease: false
+    - name: Add Files to Release
+      if: ${{ needs.generate.outputs.upload-files == 'true'}}
+      uses: actions/upload-release-asset@v1
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      with:
+        upload_url: ${{ steps.create_release.outputs.upload_url }}
+        asset_path: ./compressed.zip
+        asset_name: Stripped.zip
+        asset_content_type: application/zip
