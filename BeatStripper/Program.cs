@@ -51,6 +51,7 @@ namespace BeatStripper
                     "Photon",
                     "Unity.",
                     "BepInEx",
+                    "websocket-sharp",
                 };
 
                 foreach (string f in ResolveDLLs(managedDir, whitelist))
