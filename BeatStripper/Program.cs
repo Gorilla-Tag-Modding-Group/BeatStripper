@@ -52,6 +52,7 @@ namespace BeatStripper
                     "Unity.",
                     "BepInEx",
                     "websocket-sharp",
+                    "PlayFab"
                 };
 
                 foreach (string f in ResolveDLLs(managedDir, whitelist))
